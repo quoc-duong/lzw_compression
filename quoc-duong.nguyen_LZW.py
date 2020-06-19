@@ -54,25 +54,34 @@ def create_lzw_table(file_str, dico_arr, filename):
         # Sequence already exists in dictionary
         if buf in dico_arr:
             output = np.nan
-            if nb_bits != len(bin(dico_arr.index(buf))[2:]):
+            if nb_bits < len(bin(dico_arr.index(buf))[2:]):
                 output = 0
                 nb_bits += 1
-            temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, output]]
-                                   , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+            if output is np.nan:
+                temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, output]]
+                                       , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+            else:
+                temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, '@[%]' + '=' + str(output)]]
+                                       , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
             df = pd.concat([df, temp_df], ignore_index=True)
             continue
         new_seq = buf
         dico_arr.append(buf)
         address = len(dico_arr) - 1
-        temp_df = pd.DataFrame([[buffer, input_str, new_seq, address, dico_arr.index(buffer)]]
+        output = '@[' + buffer + ']' + '=' + str(dico_arr.index(buffer))
+        temp_df = pd.DataFrame([[buffer, input_str, new_seq, address, output]]
                                , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
         df = pd.concat([df, temp_df], ignore_index=True)
         buf = file_str[i]
 
     # EOF
-    temp_df = pd.DataFrame([[buf, np.nan, np.nan, np.nan, np.nan]]
+    if not (buf in dico_arr):
+        dico_arr.append(buf)
+    output = '@[' + buf + ']' + '=' + str(dico_arr.index(buf))
+    temp_df = pd.DataFrame([[buf, np.nan, np.nan, np.nan, output]]
                            , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
     df = pd.concat([df, temp_df], ignore_index=True)
+
     print(df)
     return df
 
