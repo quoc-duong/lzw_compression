@@ -35,11 +35,9 @@ def create_dico_file(filename, dico_arr):
 
 
 def create_lzw_table(file_str, dico_arr, filename):
-    file_lzw = open(filename + '_LZWTable.csv', 'w')
     # Starting number of bits to encode a character
     nb_bits = len(bin(len(dico_arr))[2:])
-    df = pd.DataFrame([['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
-                      , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+    df = pd.DataFrame([], columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
 
     # First character
     buf = file_str[0]
@@ -82,7 +80,6 @@ def create_lzw_table(file_str, dico_arr, filename):
                            , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
     df = pd.concat([df, temp_df], ignore_index=True)
 
-    print(df)
     return df
 
 
@@ -101,10 +98,7 @@ def main():
         create_dico_file(filename, dico_arr)
 
         df = create_lzw_table(file_str, dico_arr, filename)
-        '''
-                Create files 
-                file_lzw = open(name + '.lzw', 'w')
-        '''
+        df.to_csv(filename + '_LZWTable.csv', index=False, line_terminator='\r\n')
 
     if args.uncompress:
         print("Uncompress mode")
