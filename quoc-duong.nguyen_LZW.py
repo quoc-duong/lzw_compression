@@ -35,11 +35,14 @@ def main():
         raise ValueError('Wrong options')
 
     name = get_name(args.path)
-    print(name)
     if args.compress:
         print("Compress mode")
         file_str = open(args.path, 'r').read()
-        print(get_unique_chars_ordered(file_str))
+        dico_arr = get_unique_chars_ordered(file_str)
+        dico_file = open(name + '_dico.csv', 'w')
+        dico_file.write('%')
+        for i in range(len(dico_arr)):
+            dico_file.write(',' + dico_arr[i])
     else:
         print("Uncompress mode")
         file = open(args.path, 'r')
