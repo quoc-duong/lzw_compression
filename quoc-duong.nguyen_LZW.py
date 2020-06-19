@@ -27,6 +27,13 @@ def get_name(filename):
     return temp.split('.')[0]
 
 
+def create_dico(filename, dico_arr):
+    dico_file = open(filename + '_dico.csv', 'w')
+    dico_file.write('%')
+    for i in range(len(dico_arr)):
+        dico_file.write(',' + dico_arr[i])
+
+
 def main():
     args = parse_options()
 
@@ -39,10 +46,8 @@ def main():
         print("Compress mode")
         file_str = open(args.path, 'r').read()
         dico_arr = get_unique_chars_ordered(file_str)
-        dico_file = open(name + '_dico.csv', 'w')
-        dico_file.write('%')
-        for i in range(len(dico_arr)):
-            dico_file.write(',' + dico_arr[i])
+        create_dico(name, dico_arr)
+
     else:
         print("Uncompress mode")
         file = open(args.path, 'r')
