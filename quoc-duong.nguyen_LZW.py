@@ -14,11 +14,11 @@ def parse_options():
     return parser.parse_args()
 
 
-def get_unique_chars_ordered(file_str):
-    # Remove newline from string
-    temp = file_str.rstrip('\n')
+def create_dico(file_str):
     # Create a set from string to get unique chars and sort them lexicographically
-    return sorted(set(temp))
+    res = sorted(list(set(file_str)))
+    res.insert(0, '%')
+    return res
 
 
 # Get filename without extension
@@ -27,11 +27,54 @@ def get_name(filename):
     return temp.split('.')[0]
 
 
-def create_dico(filename, dico_arr):
+def create_dico_file(filename, dico_arr):
     dico_file = open(filename + '_dico.csv', 'w')
-    dico_file.write('%')
-    for i in range(len(dico_arr)):
-        dico_file.write(',' + dico_arr[i])
+    for i in range(len(dico_arr) - 1):
+        dico_file.write(dico_arr[i] + ',')
+    dico_file.write(dico_arr[-1])
+
+
+def create_lzw_table(file_str, dico_arr, filename):
+    file_lzw = open(filename + '_LZWTable.csv', 'w')
+    # Starting number of bits to encode a character
+    nb_bits = len(bin(len(dico_arr))[2:])
+    df = pd.DataFrame([['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
+                      , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+
+    # First character
+    buf = file_str[0]
+    temp_df = pd.DataFrame([[np.nan, buf, np.nan, np.nan, np.nan]]
+                           , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+    df = pd.concat([df, temp_df], ignore_index=True)
+    for i in range(1, len(file_str)):
+        buffer = buf
+        input_str = file_str[i]
+        buf += input_str
+
+        # Sequence already exists in dictionary
+        if buf in dico_arr:
+            output = np.nan
+            if nb_bits != len(bin(dico_arr.index(buf))[2:]):
+                output = 0
+                nb_bits += 1
+            temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, output]]
+                                   , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+            df = pd.concat([df, temp_df], ignore_index=True)
+            continue
+        new_seq = buf
+        dico_arr.append(buf)
+        address = len(dico_arr) - 1
+        temp_df = pd.DataFrame([[buffer, input_str, new_seq, address, dico_arr.index(buffer)]]
+                               , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+        df = pd.concat([df, temp_df], ignore_index=True)
+        buf = file_str[i]
+
+    # EOF
+    temp_df = pd.DataFrame([[buf, np.nan, np.nan, np.nan, np.nan]]
+                           , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+    df = pd.concat([df, temp_df], ignore_index=True)
+    print(df)
+    return df
 
 
 def main():
@@ -41,17 +84,23 @@ def main():
     if args.compress == args.uncompress:
         raise ValueError('Wrong options')
 
-    name = get_name(args.path)
+    filename = get_name(args.path)
     if args.compress:
         print("Compress mode")
-        file_str = open(args.path, 'r').read()
-        dico_arr = get_unique_chars_ordered(file_str)
-        create_dico(name, dico_arr)
+        file_str = open(args.path, 'r').read().rstrip('\n')
+        dico_arr = create_dico(file_str)
+        create_dico_file(filename, dico_arr)
 
-    else:
+        df = create_lzw_table(file_str, dico_arr, filename)
+        '''
+                Create files 
+                file_lzw = open(name + '.lzw', 'w')
+        '''
+
+    if args.uncompress:
         print("Uncompress mode")
-        file = open(args.path, 'r')
-        file_str = file.readline().rstrip('\n')
+        file_lzw = open(args.path, 'r')
+        file_str = file_lzw.readline().rstrip('\n')
         print(file_str)
 
 
