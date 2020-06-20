@@ -34,7 +34,7 @@ def create_dico_file(filename, dico_arr):
     dico_file.write(dico_arr[-1])
 
 
-def create_lzw_table(file_str, dico_arr, filename):
+def create_lzw_table(file_str, dico_arr):
     # Starting number of bits to encode a character
     nb_bits = len(bin(len(dico_arr))[2:])
     df = pd.DataFrame([], columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
@@ -83,6 +83,26 @@ def create_lzw_table(file_str, dico_arr, filename):
     return df
 
 
+def create_lzw_file(filename, series, nb_bits, file_str):
+    file_lzw = open(filename + '.lzw', 'w')
+    # Remove null values
+    np_arr = series.dropna().to_numpy()
+    c_text = ''
+    before_size = nb_bits * len(file_str)
+    after_size = 0
+    for el in np_arr:
+        after_size += nb_bits
+        bin_val = bin(int(el.split('=')[1]))[2:].zfill(nb_bits)
+        c_text += bin_val
+        if el[2] == '%':
+            nb_bits += 1
+
+    second = "Size before LZW compression: " + str(before_size) + " bits\n"
+    third = "Size after LZW compression: " + str(after_size) + " bits\n"
+    fourth = after_size / before_size
+    file_lzw.writelines([c_text + '\n', second, third, "Compression ratio: {:.3f}".format(fourth)])
+
+
 def main():
     args = parse_options()
 
@@ -97,8 +117,10 @@ def main():
         dico_arr = create_dico(file_str)
         create_dico_file(filename, dico_arr)
 
-        df = create_lzw_table(file_str, dico_arr, filename)
+        start_nb_bits = len(bin(len(dico_arr))[2:])
+        df = create_lzw_table(file_str, dico_arr)
         df.to_csv(filename + '_LZWTable.csv', index=False, line_terminator='\r\n')
+        create_lzw_file(filename, df['Output'], start_nb_bits, file_str)
 
     if args.uncompress:
         print("Uncompress mode")
