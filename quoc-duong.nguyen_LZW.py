@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import sys
-import pathlib
+from pathlib import Path
 import argparse
 import csv
 
@@ -32,6 +32,7 @@ def create_dico_file(filename, dico_arr):
     for i in range(len(dico_arr) - 1):
         dico_file.write(dico_arr[i] + ',')
     dico_file.write(dico_arr[-1])
+    dico_file.write('\r\n')
 
 
 def create_lzw_table(file_str, dico_arr):
@@ -103,6 +104,37 @@ def create_lzw_file(filename, series, nb_bits, file_str):
     file_lzw.writelines([c_text + '\n', second, third, "Compression ratio: {:.3f}".format(fourth)])
 
 
+def uncompress_lzw(lzw_str, dico_arr, nb_bits):
+    res = ""
+    i = 0
+    size = len(lzw_str)
+    first = int(lzw_str[:nb_bits], base=2)
+    lzw_str = lzw_str[nb_bits:]
+    buf = dico_arr[first]
+    while i < size:
+        if not len(lzw_str):
+            res += dico_arr[second]
+            break
+        second = int(lzw_str[:nb_bits], base=2)
+        lzw_str = lzw_str[nb_bits:]
+        if second:
+            buf += dico_arr[second][0]
+        i += nb_bits
+        if second and not (buf in dico_arr):
+            res += dico_arr[first]
+            dico_arr = np.append(dico_arr, buf)
+            first = second
+            buf = dico_arr[second]
+        elif second:
+            first = buf
+            buf = dico_arr[second]
+            continue
+        else:
+            nb_bits += 1
+
+    return res
+
+
 def main():
     args = parse_options()
 
@@ -125,8 +157,13 @@ def main():
     if args.uncompress:
         print("Uncompress mode")
         file_lzw = open(args.path, 'r')
-        file_str = file_lzw.readline().rstrip('\n')
-        print(file_str)
+        dico_path = Path(args.path).parent / (filename + '_dico.csv')
+        dico_arr = pd.read_csv(dico_path, sep=',', header=None).values[0].tolist()
+        start_nb_bits = len(bin(len(dico_arr))[2:])
+        lzw_str = file_lzw.readline().rstrip('\n')
+        result_str = uncompress_lzw(lzw_str, dico_arr, start_nb_bits)
+        print(result_str)
+        # Write into new txt file
 
 
 if __name__ == '__main__':
