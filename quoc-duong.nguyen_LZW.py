@@ -162,8 +162,9 @@ def main():
         start_nb_bits = len(bin(len(dico_arr))[2:])
         lzw_str = file_lzw.readline().rstrip('\n')
         result_str = uncompress_lzw(lzw_str, dico_arr, start_nb_bits)
-        print(result_str)
         # Write into new txt file
+        file_txt = open(filename + '.txt', 'w')
+        file_txt.write(result_str)
 
 
 if __name__ == '__main__':
