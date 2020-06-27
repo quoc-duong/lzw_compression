@@ -53,16 +53,17 @@ def create_lzw_table(file_str, dico_arr):
         # Sequence already exists in dictionary
         if buf in dico_arr:
             output = np.nan
-            if nb_bits < len(bin(dico_arr.index(buf))[2:]):
+            temp = len(bin(dico_arr.index(buf))[2:])
+            while nb_bits < temp:
                 output = 0
                 nb_bits += 1
+                temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, '@[%]' + '=' + str(output)]]
+                                       , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
+                df = pd.concat([df, temp_df], ignore_index=True)
             if output is np.nan:
                 temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, output]]
                                        , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
-            else:
-                temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, '@[%]' + '=' + str(output)]]
-                                       , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
-            df = pd.concat([df, temp_df], ignore_index=True)
+                df = pd.concat([df, temp_df], ignore_index=True)
             continue
         new_seq = buf
         dico_arr.append(buf)
