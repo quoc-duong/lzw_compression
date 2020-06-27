@@ -145,18 +145,16 @@ def main():
 
     filename = get_name(args.path)
     if args.compress:
-        print("Compress mode")
         file_str = open(args.path, 'r').read().rstrip('\n')
         dico_arr = create_dico(file_str)
         create_dico_file(filename, dico_arr)
 
         start_nb_bits = len(bin(len(dico_arr))[2:])
         df = create_lzw_table(file_str, dico_arr)
-        df.to_csv(filename + '_LZWTable.csv', index=False, line_terminator='\r\n')
+        df.to_csv(filename + '_LZWtable.csv', index=False, line_terminator='\r\n')
         create_lzw_file(filename, df['Output'], start_nb_bits, file_str)
 
     if args.uncompress:
-        print("Uncompress mode")
         file_lzw = open(args.path, 'r')
         dico_path = Path(args.path).parent / (filename + '_dico.csv')
         dico_arr = pd.read_csv(dico_path, sep=',', header=None).values[0].tolist()
