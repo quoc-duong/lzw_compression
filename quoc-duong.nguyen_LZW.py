@@ -56,7 +56,7 @@ def create_lzw_table(file_str, dico_arr):
             output = np.nan
             temp = len(bin(dico_arr.index(buf))[2:])
             while nb_bits < temp:
-                output = 0
+                output = dico_arr.index('%')
                 nb_bits += 1
                 temp_df = pd.DataFrame([[buffer, input_str, np.nan, np.nan, '@[%]' + '=' + str(output)]]
                                        , columns=['Buffer', 'Input', 'New sequence', 'Address', 'Output'])
