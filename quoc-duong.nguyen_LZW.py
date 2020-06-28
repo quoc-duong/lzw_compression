@@ -16,8 +16,9 @@ def parse_options():
 
 def create_dico(file_str):
     # Create a set from string to get unique chars and sort them lexicographically
-    res = sorted(list(set(file_str)))
-    res.insert(0, '%')
+    res = list(set(file_str))
+    res.append('%')
+    res = sorted(res)
     return res
 
 
